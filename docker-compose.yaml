@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8.9.54
+    container_name: ${PROJECT_NAME}-clickhouse
+    hostname: clickhouse
+    restart: unless-stopped
+    stop_grace_period: 10s
+    env_file: .env
+    environment:
+      CLICKHOUSE_PASSWORD: $DB_PASSWORD
+      CLICKHOUSE_DB: $DB_NAME
+      CLICKHOUSE_USER: $DB_USER
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - 9000:9000
+      - 8123:8123
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    cap_add:
+      - NET_ADMIN
+      - SYS_NICE
+      - IPC_LOCK
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  postgres:
+    image: postgres:${POSTGRES_TAG}
+    container_name: ${PROJECT_NAME}-postgres
+    hostname: postgres
+    restart: unless-stopped
+    stop_grace_period: 10s
+    env_file: .env
+    environment:
+      POSTGRES_PASSWORD: $DB_PASSWORD
+      POSTGRES_DB: $DB_NAME
+      POSTGRES_USER: $DB_USER
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  adminer:
+    image: adminer:${ADMINER_TAG}
+    container_name: ${PROJECT_NAME}-adminer
+    hostname: adminer
+    restart: unless-stopped
+    stop_grace_period: 10s
+    env_file: .env
+    ports:
+      - ${ADMINER_PORT}:8080
+
+networks:
+  default:
+    name: $PROJECT_NAME
+    driver: bridge
+
+volumes:
+  clickhouse-data: {}
+  postgres-data: {}

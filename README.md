@@ -1,2 +1,3 @@
-# docker-doris-postgres
- Docker setup for Doris and Postgres 
+# docker-clickhouse-postgres
+
+Docker setup for ClickHouse and Postgres 
